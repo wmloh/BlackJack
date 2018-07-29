@@ -1,48 +1,26 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include "./deck/deck.h"
+#include <stdio.h>
+#include "./gameEngine/gameEngine.h"
 #include "./player/player.h"
-#include <string.h>
 
 int main(void) {
 
-	struct Deck *deck = initDeck();
-	struct Player *player = initPlayer();
+	char *playerNames[2] = {"p1", "p2"};
 
-	bool play = true;
-	printf("%s\n", drawCard(deck));
+	int bets[] = {10, 10};
+	int money = 100;
 
-	char *hit = "hit";
-	char *stand = "stand";
+	struct Player **players = initAllPlayers(2, playerNames, money);
 
-	char input[8];
-	int result = 0;
+	initGame(players, 2, bets);
 
-	while (play) {
-		while (!result) {
-			result = scanf("%s", &input);
-		}
-		if (!strcmp(input, "quit")) {
-			break;
-		} else if (!strcmp(input, hit)) {
-			char *card = drawCard(deck);
-			updateCardsAtHand(player, card);
-			updateActionSeq(player, hit);
-			printf("NumCards: %i\n", updateNum(player));
-			printf("Pass\n");
-		} else if (!strcmp(input, stand)) {
-			updateActionSeq(player, stand);
-		} else if (!strcmp(input, "-help")) {
-			printf("");
-		} else {
-			printf("Invalid command. Type -help for more information.\n");
-		}
-		displayCards(player);
-		result = 0;
-	}
+	printf("%i\n", getMoney(players[0]));
+	printf("%i\n", getMoney(players[1]));
 
+	initGame(players, 2, bets);
 
-	free(getCardsLeft(deck));
-	free(getAllCards(deck));
-	free(deck);
+	printf("%i\n", getMoney(players[0]));
+	printf("%i\n", getMoney(players[1]));
+
+	freeAllPlayers(players, 2);
 }
