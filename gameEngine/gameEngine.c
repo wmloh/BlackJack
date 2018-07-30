@@ -3,6 +3,9 @@
 #include <string.h>
 #include "gameEngine.h"
 
+// checkBusted(player, curValue) return true if and only if the cards
+//   at hand exceeds 21
+// effect: mutates curValue
 static bool checkBusted(struct Player *player, int *curValue) {
 
 	int sum = 0;
@@ -90,6 +93,7 @@ void initGame(struct Player **players, int numPlayers, int *bets) {
 					inGame[i] = false;
 					endTurn = true;
 					busted[i] = true;
+					printf("%s is busted\n", getName(player));
 					continue;
 				} else {
 					printf("Current sum: %i\n", curValue[i]);

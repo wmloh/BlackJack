@@ -44,14 +44,19 @@ char **getAllCards(struct Deck *deck) {
 	return deck->cards;
 }
 
-char *getCard(struct Deck *deck, int suit, int num) {
-	return deck->cards[SUITSIZE * suit + num];
-}
 
 int *getCardsLeft(struct Deck *deck) {
 	return deck->cardsLeft;
 }
 
+char *getCard(struct Deck *deck, int suit, int num) {
+	return deck->cards[SUITSIZE * suit + num];
+}
+
+// updateCard(deck, hand, suit, num) return true if and only if card 
+//   specified by suit and num exists in the deck
+// effects: mutates hand to the card drawn if successful
+//          mutates the card drawn from array of cards in deck to NULL
 static bool updateCard(struct Deck *deck, char **hand, int suit, int num) {
 
 	char *card = getCard(deck, suit, num);
@@ -59,7 +64,6 @@ static bool updateCard(struct Deck *deck, char **hand, int suit, int num) {
 	if (card) {
 		*hand = card;
 		allCards[SUITSIZE * suit + num] = NULL;
-
 		return true;
 	}	
 	return false;
@@ -77,7 +81,7 @@ char *drawCard(struct Deck *deck) {
 		rollSuit = rand() % NUMSUIT;
 		rollNum = rand() % SUITSIZE;
 	} while (!updateCard(deck, &hand, rollSuit, rollNum));
-
+	(deck->cardsLeft)[rollSuit]--;
 	return hand;
 }
 
