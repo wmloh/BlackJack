@@ -3,24 +3,27 @@
 #include "./gameEngine/gameEngine.h"
 #include "./player/player.h"
 
+#define NUMPLAYERS 2
+
 int main(void) {
 
-	char *playerNames[2] = {"p1", "p2"};
+	char *playerNames[NUMPLAYERS] = {"p1", "p2"};
 
 	int bets[] = {10, 10};
 	int money = 100;
+	int dealerMoney = 200;
 
-	struct Player **players = initAllPlayers(2, playerNames, money);
+	struct Player **players = initAllPlayers(NUMPLAYERS, playerNames, money);
+	struct Player *dealer = initPlayer("dealer", dealerMoney);
 
-	initGame(players, 2, bets);
+	initGame(players, NUMPLAYERS, bets, dealer);
 
-	printf("%i\n", getMoney(players[0]));
-	printf("%i\n", getMoney(players[1]));
+	for(int i = 0; i < NUMPLAYERS; ++i) {
+		printf("%i\n", getMoney(players[i]));
+	}
+	
+	printf("%i\n", getMoney(dealer));
 
-	initGame(players, 2, bets);
-
-	printf("%i\n", getMoney(players[0]));
-	printf("%i\n", getMoney(players[1]));
-
-	freeAllPlayers(players, 2);
+	freeAllPlayers(players, NUMPLAYERS);
+	freePlayer(dealer);
 }

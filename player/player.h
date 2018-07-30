@@ -50,7 +50,11 @@ long getMoney(struct Player *player);
 bool placeBets(struct Player *player, int amount);
 
 
-void winBet(struct Player *winner, struct Player **players, int numPlayers);
+void winBet(struct Player *winner, struct Player *dealer);
+
+void loseBet(struct Player *loser, struct Player *dealer);
+
+void drawBet(struct Player *player, struct Player *dealer);
 
 // hitCard(player, deck) returns the card drawn
 // effects: mutates the available of card in deck

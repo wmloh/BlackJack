@@ -93,12 +93,20 @@ bool placeBets(struct Player *player, int amount) {
 	return false;
 }
 
-void winBet(struct Player *winner, struct Player **players, int numPlayers) {
-	for(int i = 0; i < numPlayers; ++i) {
-		winner->money += (players[i])->currBet;
-		(players[i])->currBet = 0;
-		refreshPlayer(players[i]);
-	}
+void winBet(struct Player *winner, struct Player *dealer) {
+	winner->money += (winner->currBet) * 2;
+	dealer->money -= winner->currBet;
+	refreshPlayer(winner);
+}
+
+void loseBet(struct Player *loser, struct Player *dealer) {
+	dealer->money += loser->currBet;
+	refreshPlayer(loser);
+}
+
+void drawBet(struct Player *player, struct Player *dealer) {
+	player->money += player->currBet;
+	refreshPlayer(player);
 }
 
 char *hitCard(struct Player *player, struct Deck *deck) {

@@ -3,6 +3,9 @@
 #include <string.h>
 #include "gameEngine.h"
 
+static char *hit = "hit";
+static char *stand = "stand";
+
 // checkBusted(player, curValue) return true if and only if the cards
 //   at hand exceeds 21
 // effect: mutates curValue
@@ -53,16 +56,39 @@ static int placeAllBets(struct Player **players, int *bets, int numPlayers) {
 	return totalBets;
 }
 
-void initGame(struct Player **players, int numPlayers, int *bets) {
+static bool commandLine(bool *endTurn, bool *inGame, struct Player *player, struct Deck *deck) {
+	char input[8];
+	while (!scanf("%s", &input)) {}
+		if (!strcmp(input, "quit")) {
+			return false;
+		} else if (!strcmp(input, hit)) {
+			hitCard(player, deck);
+			displayCards(player);
+		} else if (!strcmp(input, stand)) {
+			updateActionSeq(player, stand);
+			*endTurn = true;
+			*inGame = false;
+		} else if (!strcmp(input, "-help")) {
+			printf("Commands:\n *%s\n *%s\n *quit\n", hit, stand);
+		} else {
+			printf("Invalid command. Type -help for more information.\n");
+		}
+	return true;
+}
+
+void initGame(struct Player **players, int numPlayers, int *bets, struct Player *dealer) {
 
 	struct Deck *deck = initDeck();
 
 	placeAllBets(players, bets, numPlayers);
 
-	bool play = true;
 	bool *inGame = malloc(sizeof(bool) * numPlayers);
 	bool *busted = malloc(sizeof(bool) * numPlayers);
 	int *curValue = malloc(sizeof(int) * numPlayers);
+
+	bool dealerInGame = true;
+	bool dealerBusted = false;
+	int dealerCurValue;
 
 	#pragma omp parallel for
 	for(int i = 0; i < numPlayers; ++i) {
@@ -71,79 +97,72 @@ void initGame(struct Player **players, int numPlayers, int *bets) {
 		inGame[i] = true;
 		busted[i] = false;
 	}
+	hitCard(dealer, deck);
+	hitCard(dealer, deck);
 
-	char *hit = "hit";
-	char *stand = "stand";
-
-	char input[8];
 	struct Player *player;
 	bool endTurn;
-	int endRoundCount;
 
-	while (play) {
+	for(int i = 0; i < numPlayers && inGame[i]; ++i) {
+		player = players[i];
+		printf("\nvvvvvv %s vvvvvv\n", getName(player));
+		displayCards(player);
+		endTurn = false;
+		while(!endTurn) {
+			
+			if (checkBusted(player, &(curValue[i]))) {
+				inGame[i] = false;
+				endTurn = true;
+				busted[i] = true;
+				printf("%s is busted\n", getName(player));
+				continue;
+			} else {
+				printf("Current sum: %i\n", curValue[i]);
+			}
+			
+			if(!commandLine(&endTurn, &inGame[i], player, deck)) {
+				goto quickEnd;
+			}
 
-		for(int i = 0; i < numPlayers && inGame[i]; ++i) {
-			player = players[i];
-			printf("\nvvvvvv %s vvvvvv\n", getName(player));
-			displayCards(player);
-			endTurn = false;
-			while(!endTurn) {
-				
-				if (checkBusted(player, &(curValue[i]))) {
-					inGame[i] = false;
-					endTurn = true;
-					busted[i] = true;
-					printf("%s is busted\n", getName(player));
-					continue;
-				} else {
-					printf("Current sum: %i\n", curValue[i]);
-				}
-				
-				while (!scanf("%s", &input)) {}
-				if (!strcmp(input, "quit")) {
-					goto quickEnd;
-				} else if (!strcmp(input, hit)) {
-					hitCard(player, deck);
-					displayCards(player);
-				} else if (!strcmp(input, stand)) {
-					updateActionSeq(player, stand);
-					endTurn = true;
-					inGame[i] = false;
-				} else if (!strcmp(input, "-help")) {
-					printf("Commands:\n *%s\n *%s\n *quit\n", hit, stand);
-				} else {
-					printf("Invalid command. Type -help for more information.\n");
-				}
-			}
-			if(!play) {
-				break;
-			}
-			printf("^^^^^^^^^^^^\n");
 		}
-
-		endRoundCount = 0;
-		#pragma omp parallel for
-		for(int i = 0; i < numPlayers; ++i) {
-			if(!inGame[i]) {
-				endRoundCount++;
-			}
-		}
-		if(endRoundCount == numPlayers) {
-			break;
-		}
+		printf("^^^^^^^^^^^^\n");
 	}
 
-	int maxValue = -1;
-	int maxValueIndex = -1;
+	printf("\nvvvvvv %s vvvvvv\n", getName(dealer));
+	displayCards(dealer);
+	endTurn = false;
+	while(!endTurn) {
+		if(checkBusted(dealer, &dealerCurValue)) {
+			dealerInGame = false;
+			endTurn = true;
+			dealerBusted = true;
+			break;
+			printf("%s is busted\n", getName(dealer));
+		} else {
+			printf("Current sum: %i\n", dealerCurValue);
+		}
+
+		if(!commandLine(&endTurn, &dealerInGame, dealer, deck)) {
+			goto quickEnd;
+		}
+	}
+	printf("^^^^^^^^^^^^\n");
 
 	for(int i = 0; i < numPlayers; ++i) {
-		if(!busted[i] && curValue[i] > maxValue) {
-			maxValueIndex = i;
-			maxValue = curValue[i];
+		if (dealerBusted && !busted[i]) {
+			winBet(players[i], dealer);
+		} else if(!busted[i]) {
+			if (curValue[i] > dealerCurValue) {
+				winBet(players[i], dealer);
+			} else if (curValue[i] < dealerCurValue) {
+				loseBet(players[i], dealer);
+			} else {
+				drawBet(players[i], dealer);
+			}
+		} else {
+			drawBet(players[i], dealer);
 		}
 	}
-
-	winBet(players[maxValueIndex], players, numPlayers);
 
 	quickEnd:
 	freeDeck(deck);
