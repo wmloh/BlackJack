@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "player.h"
-#include <omp.h>
 
 #define MAXDRAWS 7
 
@@ -27,11 +26,12 @@ struct Player *initPlayer(char *name, long money) {
 	return player;
 }
 
-struct Player **initAllPlayers(int numPlayers, char **playerNames, long money) {
-	struct Player **players = malloc(sizeof(struct Player *) * numPlayers);
+struct Player **initAllPlayers(struct dArray *playerNames, long money) {
+	int len = getLen(playerNames);
+	struct Player **players = malloc(sizeof(struct Player *) * len);
 	#pragma omp parallel for
-	for(int i = 0; i < numPlayers; ++i) {
-		players[i] = initPlayer(playerNames[i], money);
+	for(int i = 0; i < len; ++i) {
+		players[i] = initPlayer(getObj(playerNames, i), money);
 	}
 	return players;
 }

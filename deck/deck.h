@@ -1,6 +1,8 @@
 #include <omp.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include "../util/utilArr.h"
+#include "../util/utilCmd.h"
 
 struct Deck;
 

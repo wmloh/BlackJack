@@ -1,4 +1,5 @@
 #include "../deck/deck.h"
+#include <omp.h>
 
 struct Player;
 
@@ -8,7 +9,7 @@ struct Player *initPlayer(char *name, long money);
 
 // initAllPlayers(numPlayers, playerNames, money) returns an array of pointers to
 //   the struct Player with playerNames and money standardized
-struct Player **initAllPlayers(int numPlayers, char **playerNames, long money);
+struct Player **initAllPlayers(struct dArray *playerNames, long money);
 
 // freePlayer(player) frees all allocated memory associated to player
 void freePlayer(struct Player *player);

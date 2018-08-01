@@ -5,6 +5,9 @@
 
 static char *hit = "hit";
 static char *stand = "stand";
+static char *dble = "double";
+static char *split = "split";
+static char *quit = "quit";
 
 // checkBusted(player, curValue) return true if and only if the cards
 //   at hand exceeds 21
@@ -46,6 +49,10 @@ static bool checkBusted(struct Player *player, int *curValue) {
 	return true;
 }
 
+// placeAllBets(players, bets, numPlayers) places bets for all players and returns
+//   the total amount of bets
+// require: len(players) == len(bets)
+// effect: mutates the money and currBet of each player
 static int placeAllBets(struct Player **players, int *bets, int numPlayers) {
 	int totalBets = 0;
 	#pragma omp parallel for
@@ -56,37 +63,54 @@ static int placeAllBets(struct Player **players, int *bets, int numPlayers) {
 	return totalBets;
 }
 
-static bool commandLine(bool *endTurn, bool *inGame, struct Player *player, struct Deck *deck) {
-	char input[8];
-	while (!scanf("%s", &input)) {}
-		if (!strcmp(input, "quit")) {
-			return false;
-		} else if (!strcmp(input, hit)) {
-			hitCard(player, deck);
-			displayCards(player);
-		} else if (!strcmp(input, stand)) {
-			updateActionSeq(player, stand);
-			*endTurn = true;
-			*inGame = false;
-		} else if (!strcmp(input, "-help")) {
-			printf("Commands:\n *%s\n *%s\n *quit\n", hit, stand);
+// commandLine(endTurn, player, deck, round) provides a command line interface and
+//   returns false if and only if the command is "quit"
+// effect: mutates endTurn, player, deck
+static bool commandLine(bool *endTurn, struct Player *player, struct Deck *deck, int round) {
+	char *input = getInput();
+	if (!strcmp(input, quit)) {
+		return false;
+	} else if (!strcmp(input, hit)) {
+		hitCard(player, deck);
+		displayCards(player);
+	} else if (!strcmp(input, stand)) {
+		updateActionSeq(player, stand);
+		*endTurn = true;
+	} else if (!strcmp(input, dble)) {
+		if(round == 1) {
+
 		} else {
-			printf("Invalid command. Type -help for more information.\n");
+			printf("Double command can only be done in the first round\n");
 		}
+	} else if (!strcmp(input, split)) {
+		if(round == 1) {
+			char **cards = getCardsAtHand(player);
+			if(cards[0][0] == cards[1][0]) {
+
+			} else {
+				printf("Split can only be used when the denomination of the cards are the same\n");
+			}
+		} else {
+			printf("Split command can only be done in the first round\n");
+		}
+	} else if (!strcmp(input, "-help")) {
+		printf("Commands:\n *%s\n *%s\n *quit\n", hit, stand);
+	} else {
+		printf("Invalid command. Type -help for more information.\n");
+	}
+	free(input);
 	return true;
 }
 
-void initGame(struct Player **players, int numPlayers, int *bets, struct Player *dealer) {
+void initRound(struct Player **players, int numPlayers, int *bets, struct Player *dealer) {
 
 	struct Deck *deck = initDeck();
 
 	placeAllBets(players, bets, numPlayers);
 
-	bool *inGame = malloc(sizeof(bool) * numPlayers);
 	bool *busted = malloc(sizeof(bool) * numPlayers);
 	int *curValue = malloc(sizeof(int) * numPlayers);
 
-	bool dealerInGame = true;
 	bool dealerBusted = false;
 	int dealerCurValue;
 
@@ -94,7 +118,6 @@ void initGame(struct Player **players, int numPlayers, int *bets, struct Player 
 	for(int i = 0; i < numPlayers; ++i) {
 		hitCard(players[i], deck);
 		hitCard(players[i], deck);
-		inGame[i] = true;
 		busted[i] = false;
 	}
 	hitCard(dealer, deck);
@@ -102,8 +125,10 @@ void initGame(struct Player **players, int numPlayers, int *bets, struct Player 
 
 	struct Player *player;
 	bool endTurn;
+	int round;
 
-	for(int i = 0; i < numPlayers && inGame[i]; ++i) {
+	for(int i = 0; i < numPlayers; ++i) {
+		round = 1;
 		player = players[i];
 		printf("\nvvvvvv %s vvvvvv\n", getName(player));
 		displayCards(player);
@@ -111,7 +136,6 @@ void initGame(struct Player **players, int numPlayers, int *bets, struct Player 
 		while(!endTurn) {
 			
 			if (checkBusted(player, &(curValue[i]))) {
-				inGame[i] = false;
 				endTurn = true;
 				busted[i] = true;
 				printf("%s is busted\n", getName(player));
@@ -120,20 +144,21 @@ void initGame(struct Player **players, int numPlayers, int *bets, struct Player 
 				printf("Current sum: %i\n", curValue[i]);
 			}
 			
-			if(!commandLine(&endTurn, &inGame[i], player, deck)) {
+			if(!commandLine(&endTurn, player, deck, round)) {
 				goto quickEnd;
 			}
+			round++;
 
 		}
 		printf("^^^^^^^^^^^^\n");
 	}
 
+	round = 1;
 	printf("\nvvvvvv %s vvvvvv\n", getName(dealer));
 	displayCards(dealer);
 	endTurn = false;
 	while(!endTurn) {
 		if(checkBusted(dealer, &dealerCurValue)) {
-			dealerInGame = false;
 			endTurn = true;
 			dealerBusted = true;
 			break;
@@ -142,9 +167,10 @@ void initGame(struct Player **players, int numPlayers, int *bets, struct Player 
 			printf("Current sum: %i\n", dealerCurValue);
 		}
 
-		if(!commandLine(&endTurn, &dealerInGame, dealer, deck)) {
+		if(!commandLine(&endTurn, dealer, deck, round)) {
 			goto quickEnd;
 		}
+		round++;
 	}
 	printf("^^^^^^^^^^^^\n");
 
@@ -160,13 +186,12 @@ void initGame(struct Player **players, int numPlayers, int *bets, struct Player 
 				drawBet(players[i], dealer);
 			}
 		} else {
-			drawBet(players[i], dealer);
+			loseBet(players[i], dealer);
 		}
 	}
 
 	quickEnd:
 	freeDeck(deck);
-	free(inGame);
 	free(busted);
 	free(curValue);
 }

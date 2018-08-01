@@ -1,0 +1,8 @@
+------------------------------------------------------
+*new - initializes a new player
+pop - remove most recently added player
+*money - specifies the amount of money each player has
+*dealer - initializes a dealer
+end - complete initialization
+------------------------------------------------------
+* indicates that the field must be completed
