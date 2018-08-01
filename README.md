@@ -10,13 +10,13 @@ The game runs with command line (look at _"How to Use"_ section).
 '''
 BlackJack
 Welcome to BlackJack! Type -help for a list of commands
->> new
+-> new
 Player name?: p1
->> new
+-> new
 Player name?: p2
->> money
+-> money
 Enter amount: 100
->> dealer
+-> dealer
 Dealer name?: dealer1
 Enter amount: 200
 end
@@ -56,7 +56,7 @@ p1: $80
 p2: $80
 dealer: $240
 Type "play", "reconfigure" or "quit"
->> quit
+-> quit
 '''
 
 
