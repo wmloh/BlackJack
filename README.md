@@ -8,7 +8,7 @@ The game runs with command line (look at _"How to Use"_ section).
 
 ## How to Use
 
-'''
+```
 BlackJack
 Welcome to BlackJack! Type -help for a list of commands
 -> new
@@ -58,7 +58,7 @@ p2: $80
 dealer: $240
 Type "play", "reconfigure" or "quit"
 -> quit
-'''
+```
 
 ## Further (Potential) Improvements
 * Include a custom C function pointer parameter in initGame to enable training of a machine learning / genetic algorithm model
