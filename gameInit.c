@@ -26,6 +26,10 @@ static bool commandLine(struct dArray *playerNames, char **dealerName, int *play
 			answer = getInput();
 			appendObj(playerNames, answer);
 		} else if (!strcmp(input, pop)) {
+			if(!getLen(playerNames)) {
+				printf("Currently empty\n");
+				continue;
+			}
 			void *obj = removeObj(playerNames);
 			printf("%s removed\n", (char *)obj);
 			free(obj);
@@ -106,7 +110,7 @@ void initGame(void) {
 		} else if (!strcmp(input, "reconfigure")) {
 			commandLine(playerNames, &dealerName, &money, &dealerMoney);
 		} else if (!strcmp(input, quit)) {
-			exit(0);
+			break;
 		} else {
 			printf("Invalid command. Type either \"play\", \"reconfigure\" or \"quit\".\n");
 		}
