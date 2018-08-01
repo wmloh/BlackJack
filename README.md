@@ -7,6 +7,7 @@ The game runs with command line (look at _"How to Use"_ section).
 * Cygwin
 
 ## How to Use
+
 '''
 BlackJack
 Welcome to BlackJack! Type -help for a list of commands
@@ -26,7 +27,7 @@ Initial amount of money: $100
 The dealer(dealer1) has $200
 
 Type "play", "reconfigure" or "quit"
->> play
+-> play
 Bet amount for p1: 20
 Bet amount for p2: 20
 
@@ -58,7 +59,6 @@ dealer: $240
 Type "play", "reconfigure" or "quit"
 -> quit
 '''
-
 
 ## Further (Potential) Improvements
 * Include a custom C function pointer parameter in initGame to enable training of a machine learning / genetic algorithm model
